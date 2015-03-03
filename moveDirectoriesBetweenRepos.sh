@@ -87,6 +87,8 @@ do
 
 	
 		git remote rm origin;
+		shopt -s extglob
+        rm  -rf !($dir)
 		git filter-branch --subdirectory-filter $dir/ -- --all;
 		mkdir -p $basePath/repoOriginTemp/temp-repo/$dir;
 		#Remove configuration files
