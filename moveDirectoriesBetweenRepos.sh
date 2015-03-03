@@ -11,20 +11,21 @@ if [ -z $1 ]; then branchTarget="master"; else branchTarget=$1; fi
 
 if [ -z $2 ]; then branchOrigin="master"; else branchOrigin=$2; fi
 	echo  "branchOrigin: $branchOrigin"
-	
+
 
 if [ -z $3 ]; then 
-	 echo "Please, provide an url for origin repo"
- 	 exit 1 
-else 
-	originRepoURL=$3 
-fi
-
-if [ -z $4 ]; then 
 	 echo "Please, provide an url for target repo"
  	 exit 1 
 else 
-	targetRepoURL=$4 
+	targetRepoURL=$3 
+fi
+	
+
+if [ -z $4 ]; then 
+	 echo "Please, provide an url for origin repo"
+ 	 exit 1 
+else 
+	originRepoURL=$4 
 fi
 
 echo  "originRepoURL: $originRepoURL"
@@ -56,7 +57,9 @@ mkdir -p $basePath/repoTargetTemp;
 cd $basePath/repoTargetTemp;
 echo "cloning..."
 echo "git clone -b $branchTarget $targetRepoURL temp-repo";
-git clone -b $branchTarget $targetRepoURL temp-repo;
+git clone -b master $targetRepoURL temp-repo;
+git branch $branchTarget;
+git checkout $branchTarget;
 #reset all commits
 # cd temp-repo;
 # git init;
@@ -87,26 +90,28 @@ do
 
 	
 		git remote rm origin;
-		shopt -s extglob
-        rm  -rf !($dir)
+		
 		git filter-branch --subdirectory-filter $dir/ -- --all;
 		mkdir -p $basePath/repoOriginTemp/temp-repo/$dir;
 		#Remove configuration files
 		rm -rf .classpath .project .gitignore .settings .springBeans; 
+
 		mv * $basePath/repoOriginTemp/temp-repo/$dir;
 		git add --all ./;
 		git commit -m "filter-branch by $dir directory " ;
+		
+#TODO task to run on target repo
+
 		cd $basePath/repoTargetTemp/temp-repo/;
 
-
-#TODO task to run on target repo
+		git rm -rf $dir
 		git remote rm branch_temp;
 		git remote add branch_temp $basePath/repoOriginTemp/temp-repo/;
 		git pull branch_temp $branchTarget;
 		git remote rm branch_temp;
 		echo "Pushing .... git push $targetRepoURL $branchTarget:$branchOrigin "
 		git commit -a;
-		git push origin $branchTarget:$branchOrigin;
+		git push origin $branchTarget;
 
 		if [ $? -eq 0 ]; then
           echo "Pushing OK";
